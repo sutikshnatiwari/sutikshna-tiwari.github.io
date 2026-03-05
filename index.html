@@ -551,13 +551,15 @@
         <div><div class="contact-label">Phone</div><div class="contact-value">732-318-1534</div></div>
       </div>
     </div>
-    <form class="contact-form" id="contact-form">
+    <form class="contact-form" id="contact-form" action="https://formspree.io/f/xkoqwvjp" method="POST">
+      <input type="hidden" name="_subject" value="New message from your portfolio!"/>
+      <input type="hidden" name="_replyto" id="replyto"/>
       <div class="form-row">
-        <div class="form-group"><label for="name">Name</label><input id="name" type="text" placeholder="Your Name"/></div>
-        <div class="form-group"><label for="email">Email</label><input id="email" type="email" placeholder="your@email.com"/></div>
+        <div class="form-group"><label for="name">Name</label><input id="name" name="name" type="text" placeholder="Your Name" required/></div>
+        <div class="form-group"><label for="email">Email</label><input id="email" name="email" type="email" placeholder="your@email.com" required/></div>
       </div>
-      <div class="form-group"><label for="subject">Subject</label><input id="subject" type="text" placeholder="Internship &middot; Collaboration &middot; Chat"/></div>
-      <div class="form-group"><label for="message">Message</label><textarea id="message" placeholder="Hi Sunny, I&apos;d love to connect about..."></textarea></div>
+      <div class="form-group"><label for="subject">Subject</label><input id="subject" name="subject" type="text" placeholder="Internship &middot; Collaboration &middot; Chat"/></div>
+      <div class="form-group"><label for="message">Message</label><textarea id="message" name="message" placeholder="Hi Sunny, I&apos;d love to connect about..." required></textarea></div>
       <button type="submit" class="btn-primary" style="width:100%;text-align:center;font-family:inherit">Send Message &rarr;</button>
     </form>
   </div>
@@ -606,24 +608,40 @@ document.addEventListener('DOMContentLoaded',()=>{
   },{threshold:.1});
   fels.forEach((el,i)=>{el.classList.add('fade-in');el.dataset.d=i%4;fo.observe(el)});
 
-  // Contact form
+  // Contact form — Formspree AJAX
   const form=document.getElementById('contact-form');
   const toast=document.getElementById('toast');
   function showToast(msg,color='var(--neon)'){
     toast.textContent=msg;toast.style.background=color;
     toast.style.color=color==='var(--neon)'?'#000':'#fff';
     toast.classList.add('show');
-    setTimeout(()=>toast.classList.remove('show'),3500);
+    setTimeout(()=>toast.classList.remove('show'),4000);
   }
   if(form){
-    form.addEventListener('submit',e=>{
+    form.addEventListener('submit',async e=>{
       e.preventDefault();
       const n=form.querySelector('#name').value.trim();
       const em=form.querySelector('#email').value.trim();
       const msg=form.querySelector('#message').value.trim();
-      if(!n||!em||!msg){showToast('Please fill in all fields!','#ff6b6b');return}
-      showToast('Thanks '+n+'! Message received.');
-      form.reset();
+      if(!n||!em||!msg){showToast('⚠️ Please fill in all fields!','#ff6b6b');return}
+      const btn=form.querySelector('button[type="submit"]');
+      btn.textContent='Sending...';btn.disabled=true;
+      try{
+        const res=await fetch('https://formspree.io/f/xkoqwvjp',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body:JSON.stringify({name:n,email:em,subject:form.querySelector('#subject').value,message:msg})
+        });
+        if(res.ok){
+          showToast('✅ Thanks '+n+'! Message sent to Sunny.');
+          form.reset();
+        } else {
+          showToast('❌ Something went wrong. Email sunny98@bu.edu directly.','#ff6b6b');
+        }
+      } catch(err){
+        showToast('❌ Network error. Try emailing sunny98@bu.edu','#ff6b6b');
+      }
+      btn.textContent='Send Message →';btn.disabled=false;
     });
   }
 
